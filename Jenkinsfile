@@ -8,9 +8,9 @@ pipeline {
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
-    // parameters{
-    //     booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
-    // }
+    parameters{
+        booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
+    }
     environment{
         def appVersion = ''  //variable declaration
         nexusUrl = 'nexus.imvicky.online:8081'
@@ -54,6 +54,13 @@ pipeline {
                 }
             }
         }
+        stage("Quality Gate") {
+            steps {
+              timeout(time: 30, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+        }
 
         stage('Nexus Artifact upload'){
             steps{
@@ -77,6 +84,11 @@ pipeline {
             }
         }
         stage('Deploy'){
+            when{
+                expression{
+                    params.deploy
+                }
+            }
             steps{
                 script{
                 def params = [
